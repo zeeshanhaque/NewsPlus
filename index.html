@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News+</title>
+    <link rel="shortcut icon" href="assets/NewsPlusLogoShort.png" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav>
+        <div class="main-nav container grid">
+
+            <a href="#" onclick="reload()" class="company-logo">
+                <img src="assets/NewsPlus.png" alt="company logo">
+            </a>
+
+            <div class="mobile-nav grid">
+
+                <div class="nav-links grid">
+                    <ul class="flex">
+                        <li class="hover-link nav-item" id="politics" onclick="onNavItemClick('politics')">Politics</li>
+                        <li class="hover-link nav-item" id="world" onclick="onNavItemClick('world')">World</li>
+                        <li class="hover-link nav-item" id="sports" onclick="onNavItemClick('sports')">Sports</li>
+                        <li class="hover-link nav-item" id="technology" onclick="onNavItemClick('technology')">
+                            Technology
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="search-bar flex grid">
+                    <input id="search-text" type="text" class="news-input" placeholder="e.g. Science">
+                    <button id="search-button" class="search-button">Search</button>
+                </div>
+            </div>
+        </div>
+
+    </nav>
+
+    <main>
+        <div class="briefing-container container flex">
+            <div class="date-info">
+                <h2 class="briefing">Your briefing</h2>
+                <h5 class="today-date" id="today-date"></h5>
+            </div>
+
+            <div class="weather">
+                <div class="weather-body flex" id="weather-body">
+                    <p id="weather-location"></p>
+                    <img src="assets/cloud.png" alt="Weather Image" class="weather-img" id="weather-img" width="45px">
+
+                    <div class="weather-box">
+                        <p class="temperature" id="temperature"></p>
+                        <p class="description" id="description"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cards-container container flex" id="cards-container">
+        </div>
+
+        <div class="dark-mode">
+            <img src="assets/night-mode.png" alt="night-mode" class="dark-img" onclick="darkMode()">
+        </div>
+    </main>
+
+    <template id="template-news-card">
+        <div class="card">
+
+            <div class="card-header">
+                <img src="https://via.placeholder.com/400x200" alt="news-image" id="news-img">
+            </div>
+            <div class="card-content">
+                <h3 id="news-title"></h3>
+                <div class="news-publish flex">
+                    <h5 class="news-source" id="news-source">
+                        </h6>
+                        <h6 class="news-date" id="news-date"></h6>
+                </div>
+                <p class="news-desc" id="news-desc"></p>
+            </div>
+        </div>
+    </template>
+
+    <footer class="footer">
+        <div class="footer-container container">
+            <div class="footer-data">
+                <div class="footer-logos flex">
+                    <img class="footer-logo" src="assets/NewsPlusLogoShort.png" alt="">
+                    <hr class="logo-hr">
+                    <img class="footer-logo" src="assets/z-logo.png" alt="">
+                </div>
+                <p class="footer-text">News+</p>
+            </div>
+
+            <div class="footer-data">
+                <h2 class="footer-title">CATEGORIES</h2>
+                <div class="footer-categories flex">
+                    <ul class="footer-category grid">
+                        <li class="hover-link nav-item flex" id="national" onclick="onNavItemClick('national')">National</li>
+                        <li class="hover-link nav-item flex" id="business" onclick="onNavItemClick('business')">Business</li>
+                        <li class="hover-link nav-item flex" id="sports" onclick="onNavItemClick('sports')">Sports</li>
+                        <li class="hover-link nav-item flex" id="world" onclick="onNavItemClick('world')">
+                            World
+                        </li>
+                    </ul>
+                    <ul class="footer-category grid">
+                        <li class="hover-link nav-item flex" id="politics" onclick="onNavItemClick('politics')">Politics</li>
+                        <li class="hover-link nav-item flex" id="science" onclick="onNavItemClick('science')">Science</li>
+                        <li class="hover-link nav-item flex" id="startup" onclick="onNavItemClick('startup')">Startup</li>
+                        <li class="hover-link nav-item flex" id="hatke" onclick="onNavItemClick('hatke')">Hatke</li>
+                    </ul>
+                    <ul class="footer-category grid">
+                        <li class="hover-link nav-item flex" id="miscellaneous" onclick="onNavItemClick('miscellaneous')">Miscellaneous</li>
+                        <li class="hover-link nav-item flex" id="entertainment" onclick="onNavItemClick('entertainment')">
+                            Entertainment
+                        </li>
+                        <li class="hover-link nav-item flex" id="technology" onclick="onNavItemClick('technology')">Technology</li>
+                        <li class="hover-link nav-item flex" id="automobile" onclick="onNavItemClick('automobile')">
+                            Automobile
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-data">
+                <h2 class="footer-title">FOLLOW NEWS+</h2>
+                <div class="connect_icons flex">
+                    <a href="https://www.instagram.com/zeeshanhaq._/" target="_blank"><img
+                            src="assets/social-icons/instagram-icon.png" class="social-icon" alt="insta-icon"></a>
+                    <a href="https://www.facebook.com/profile.php?id=100005038604896" target="_blank"><img
+                            src="assets/social-icons/facebook-icon.png" class="social-icon" alt="fb-icon"></a>
+                </div>
+            </div>
+
+        </div>
+        <div class="copyright-details container">
+            <hr>
+            <div>&copy; 2023 News+ &nbsp; | &nbsp; Developed by Zeeshan Haque</div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
