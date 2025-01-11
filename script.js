@@ -19,7 +19,7 @@ async function fetchNews(newsCategory) {
 
     try {
         // Prepare search query
-        const searchQuery = newsCategory === 'all' ? 'technology' : newsCategory;
+        const searchQuery = newsCategory;
         const encodedQuery = encodeURIComponent(searchQuery).replace(/%20/g, '+');
         
         // Construct the News API URL
@@ -39,7 +39,9 @@ async function fetchNews(newsCategory) {
         const newsData = JSON.parse(data.contents);
         
         // Filter articles
-        const filteredArticles = newsData.articles.slice(0, 12);
+        const filteredArticles = newsData.articles
+            .filter(article => article.title !== '[Removed]')
+            .slice(0, 36);
 
         bindData(filteredArticles);
     } catch (error) {
