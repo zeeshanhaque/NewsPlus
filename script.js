@@ -1,5 +1,12 @@
+import config from './config.js';
+
+const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+const NEWS_API_ENDPOINT = 'https://newsapi.org/v2/everything';
+const WEATHER_API_ENDPOINT = 'https://api.openweathermap.org/data/2.5/weather';
+
+// Initialize on load
 window.addEventListener("load", () => {
-    fetchNews("all");
+    fetchNews('all');
     checkWeather();
 });
 
@@ -11,25 +18,48 @@ async function fetchNews(newsCategory) {
     const newsBox = document.getElementById("cards-container");
 
     try {
-        const response = await fetch(`https://inshortsapi.vercel.app/news?category=${newsCategory}`);
+        // Prepare search query
+        const searchQuery = newsCategory === 'all' ? 'technology' : newsCategory;
+        const encodedQuery = encodeURIComponent(searchQuery).replace(/%20/g, '+');
+        
+        // Construct the News API URL
+        const newsApiUrl = `${NEWS_API_ENDPOINT}?q=${encodedQuery}&apiKey=${config.NEWS_API_KEY}&pageSize=30&language=en`;
+        
+        // Encode the full URL for the CORS proxy
+        const proxyUrl = `${CORS_PROXY}${encodeURIComponent(newsApiUrl)}`;
+        
+        const response = await fetch(proxyUrl);
+        
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
 
         const data = await response.json();
-        bindData(data.data);
+        // The proxy wraps the response in a 'contents' property that needs to be parsed
+        const newsData = JSON.parse(data.contents);
+        
+        // Filter articles
+        const filteredArticles = newsData.articles.slice(0, 12);
+
+        bindData(filteredArticles);
     } catch (error) {
         console.error("Error fetching news:", error);
+        newsBox.innerHTML = '<div class="error">Failed to load news. Please try again later.</div>';
     }
     document.documentElement.scrollTop = 0;
 }
 
-function bindData(newsData) {
+function bindData(articles) {
     const cardsContainer = document.getElementById("cards-container");
     cardsContainer.innerHTML = "";
 
-    newsData.forEach(news => {
-        const card = createNewsCard(news);
+    if (!articles || articles.length === 0) {
+        cardsContainer.innerHTML = '<div class="no-results">No news articles found</div>';
+        return;
+    }
+
+    articles.forEach(article => {
+        const card = createNewsCard(article);
         cardsContainer.appendChild(card);
     });
 }
@@ -44,15 +74,22 @@ function createNewsCard(news) {
     const newsDate = cardClone.querySelector("#news-date");
     const newsDesc = cardClone.querySelector("#news-desc");
 
-    newsImg.src = news.imageUrl;
-    newsTitle.textContent = news.title;
-    newsDesc.textContent = news.content;
+    // Handle image with fallback
+    newsImg.src = news.urlToImage || './assets/news-default.jpg';
+    newsImg.onerror = () => {
+        newsImg.src = './assets/news-default.jpg';
+    };
 
-    newsSource.textContent = news.author;
-    newsDate.textContent = news.date;
+    newsTitle.textContent = news.title || 'No title available';
+    newsDesc.textContent = news.description || 'No description available';
+    newsSource.textContent = news.source?.name || 'Unknown Source';
+
+    // Format the date
+    const publishDate = news.publishedAt ? new Date(news.publishedAt) : new Date();
+    newsDate.textContent = publishDate.toLocaleDateString();
 
     cardClone.firstElementChild.addEventListener("click", () => {
-        window.open(news.url, "_blank");
+        window.open(news.url, "_blank", "noopener,noreferrer");
     });
 
     return cardClone;
@@ -72,7 +109,7 @@ function onNavItemClick(id) {
 
 const searchButton = document.getElementById("search-button");
 searchButton.addEventListener("click", () => {
-    const query = document.getElementById("search-text").value.trim().toLowerCase();
+    const query = document.getElementById("search-text").value.trim();
     if (query) {
         fetchNews(query);
         if (curSelectedNav) {
@@ -82,80 +119,95 @@ searchButton.addEventListener("click", () => {
     }
 });
 
-
-//  WEATHER
-
-const weatherBody = document.querySelector('#weather-body');
-const weatherLocation = document.querySelector('#weather-location');
-const weatherImg = document.querySelector('#weather-img');
-const temperature = document.querySelector('#temperature');
-const description = document.querySelector('#description');
-
+// Weather functionality
 async function checkWeather() {
     const cityName = 'Dahanu';
-    const weatherAPI = "ecee6f9e50124b746b3d065af7fb1ba0";
-    const weatherURL = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${weatherAPI}`;
 
-    const weatherData = await fetch(weatherURL).then((response) => response.json());
+    try {
+        // Construct the Weather API URL
+        const weatherApiUrl = `${WEATHER_API_ENDPOINT}?q=${cityName}&appid=${config.WEATHER_API_KEY}`;
+        
+        // Encode the full URL for the CORS proxy
+        const proxyUrl = `${CORS_PROXY}${encodeURIComponent(weatherApiUrl)}`;
+        
+        const response = await fetch(proxyUrl);
 
-    weatherLocation.innerHTML = `${weatherData.name}`;
-    temperature.innerHTML = `${Math.round(weatherData.main.temp - 273.15)}°C`;
-    description.innerHTML = `${weatherData.weather[0].main}`;
+        if (!response.ok) {
+            throw new Error('Weather API request failed');
+        }
 
-    switch (weatherData.weather[0].main) {
-        case "Clouds":
-            weatherImg.src = "./assets/cloud.png";
-            break;
-        case "Thunderstorm":
-            weatherImg.src = "./assets/storm.png";
-            break;
-        case "Clear":
-            weatherImg.src = "./assets/clear.png";
-            break;
-        case "Rain":
-        case "Drizzle":
-            weatherImg.src = "./assets/rain.png";
-            break;
-        case "Haze":
-        case "Mist":
-        case "Fog":
-            weatherImg.src = "./assets/mist.png";
-            break;
-        case "Snow":
-            weatherImg.src = "./assets/snow.png";
-            break;
-        default:
-            weatherImg.src = "./assets/clear.png";
+        const data = await response.json();
+        const weatherData = JSON.parse(data.contents);
+        updateWeatherUI(weatherData);
+    } catch (error) {
+        console.error("Error fetching weather:", error);
+        document.querySelector('#weather-body').innerHTML = 
+            '<p>Weather data unavailable</p>';
     }
 }
 
-checkWeather();
+function updateWeatherUI(weatherData) {
+    const weatherLocation = document.querySelector('#weather-location');
+    const temperature = document.querySelector('#temperature');
+    const description = document.querySelector('#description');
+    const weatherImg = document.querySelector('#weather-img');
 
+    weatherLocation.textContent = weatherData.name;
+    temperature.textContent = `${Math.round(weatherData.main.temp - 273.15)}°C`;
+    description.textContent = weatherData.weather[0].main;
 
-//  DATE
+    // Update weather image based on condition
+    const weatherImages = {
+        'Clouds': './assets/cloud.png',
+        'Thunderstorm': './assets/storm.png',
+        'Clear': './assets/clear.png',
+        'Rain': './assets/rain.png',
+        'Drizzle': './assets/rain.png',
+        'Haze': './assets/mist.png',
+        'Mist': './assets/mist.png',
+        'Fog': './assets/mist.png',
+        'Snow': './assets/snow.png'
+    };
 
-function formatTime(date) {
+    weatherImg.src = weatherImages[weatherData.weather[0].main] || './assets/clear.png';
+    weatherImg.onerror = () => {
+        weatherImg.src = './assets/clear.png';
+    };
+}
+
+// Date functionality
+function updateDate() {
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
     ];
 
+    const currentDate = new Date();
     const todayDate = document.getElementById("today-date");
+    
+    const day = days[currentDate.getDay()];
+    const dayOfMonth = currentDate.getDate();
+    const month = months[currentDate.getMonth()];
 
-    const day = days[date.getDay()];
-    const dayOfMonth = date.getDate();
-    const month = months[date.getMonth()];
-
-    todayDate.innerHTML = `${day}, ${dayOfMonth} ${month}`;
+    todayDate.textContent = `${day}, ${dayOfMonth} ${month}`;
 }
 
-const currentDate = new Date();
-const formattedTime = formatTime(currentDate);
-
-
-// DARK 
-
+// Dark mode functionality
 function darkMode() {
     document.body.classList.toggle('dark');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark'));
 }
+
+// Initialize dark mode from localStorage
+document.addEventListener('DOMContentLoaded', () => {
+    updateDate();
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+    }
+});
+
+// Make functions available globally for HTML onclick handlers
+window.onNavItemClick = onNavItemClick;
+window.darkMode = darkMode;
+window.reload = reload;
